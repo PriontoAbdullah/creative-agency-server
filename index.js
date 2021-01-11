@@ -29,7 +29,7 @@ client.connect((err) => {
 	// Added all services Information
 	app.post('/addServices', (req, res) => {
 		const mainData = req.body;
-		servicesCollection.insertMany(mainData).then((result) => {
+		servicesCollection.insertOne(mainData).then((result) => {
 			console.log(result);
 			console.log(result.insertedCount, 'Data Inserted');
 			res.send(result.insertedCount);
@@ -56,6 +56,15 @@ client.connect((err) => {
 	app.get('/Reviews', (req, res) => {
 		reviewsCollection.find({}).toArray((err, documents) => {
 			res.send(documents);
+		});
+	});
+
+	// Added Customer Review
+	app.post('/addSingleReview', (req, res) => {
+		const NewReview = req.body;
+		reviewsCollection.insertOne(NewReview).then((result) => {
+			res.send(result);
+			console.log(result.insertedCount);
 		});
 	});
 
@@ -125,7 +134,21 @@ client.connect((err) => {
 		});
 	});
 
-	
+	// Update order status
+	app.patch('/updateStatus/:id', (req, res) => {
+		// console.log(req.body.status);
+		// console.log(req.params.id);
+		ordersCollection
+			.updateOne(
+				{ _id: ObjectId(req.params.id) },
+				{
+					$set: { status: req.body.status }
+				}
+			)
+			.then((result) => {
+				res.send(result);
+			});
+	});
 });
 
 app.get('/', (req, res) => {
