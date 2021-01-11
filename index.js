@@ -21,6 +21,8 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 client.connect((err) => {
 	const servicesCollection = client.db('creativeAgency').collection('services');
 	const reviewsCollection = client.db('creativeAgency').collection('reviews');
+	const adminCollection = client.db('creativeAgency').collection('admins');
+	const ordersCollection = client.db('creativeAgency').collection('orders');
 
 	console.log('Creative Agency DataBase Connected');
 
@@ -41,7 +43,6 @@ client.connect((err) => {
 		});
 	});
 
-
 	// Added Review Information
 	app.post('/addReviews', (req, res) => {
 		const newVolunteer = req.body;
@@ -51,12 +52,78 @@ client.connect((err) => {
 		});
 	});
 
-		// Get all reviewsInformation
-		app.get('/Reviews', (req, res) => {
-			reviewsCollection.find({}).toArray((err, documents) => {
-				res.send(documents);
-			});
+	// Get all reviewsInformation
+	app.get('/Reviews', (req, res) => {
+		reviewsCollection.find({}).toArray((err, documents) => {
+			res.send(documents);
 		});
+	});
+
+	// Added a new admin
+	app.post('/addAdmin', (req, res) => {
+		const userAdmin = req.body;
+		adminCollection.insertOne(userAdmin).then((result) => {
+			res.send(result);
+			console.log(result.insertedCount);
+		});
+	});
+
+	// Added admin access
+	app.get('/getAdmin', (req, res) => {
+		adminCollection.find({ email: req.query.email }).toArray((err, documents) => {
+			res.send(documents.length > 0);
+		});
+	});
+
+	// Added Order Information
+	app.post('/addNewOrder', (req, res) => {
+		const file = req.files.file;
+		const img = req.body.img;
+		const name = req.body.name;
+		const email = req.body.email;
+		const price = req.body.price;
+		const company_name = req.body.company_name;
+		const details = req.body.details;
+		const status = req.body.status;
+		const newImg = file.data;
+		const encImg = newImg.toString('base64');
+
+		var image = {
+			contentType: file.mimetype,
+			size: file.size,
+			img: Buffer.from(encImg, 'base64')
+		};
+
+		ordersCollection
+			.insertOne({
+				name,
+				email,
+				image,
+				price,
+				company_name,
+				details,
+				status,
+				img
+			})
+			.then((result) => {
+				res.send(result.insertedCount > 0);
+				console.log(result.insertedCount);
+			});
+	});
+
+	// Get Order Information
+	app.get('/getAllOrder', (req, res) => {
+		ordersCollection.find({}).toArray((err, documents) => {
+			res.send(documents);
+		});
+	});
+
+	// Get Customer Information
+	app.get('/getMyOrder', (req, res) => {
+		ordersCollection.find({ email: req.query.email }).toArray((err, documents) => {
+			res.send(documents);
+		});
+	});
 
 	
 });
